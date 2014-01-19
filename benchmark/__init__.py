@@ -4,4 +4,5 @@ from plotter import Plotter
 from settings import Settings
 from user import User
 
+from bench_skeleton import SkeletonBenchmark, SkeletonUser
 from bench_tpcc import TPCCBenchmark, TPCCUser
