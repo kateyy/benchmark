@@ -74,7 +74,9 @@ for num_clients in xrange(minClients, maxClients+1):
     runId = "numClients_%s" % num_clients
     kwargs["numUsers"] = num_clients
 
-    b1 = benchmark.TPCCHBenchmark(groupId, runId, s1, **kwargs)
+    queries = {1, 3, 6, 18, 19}
+
+    b1 = benchmark.TPCCHBenchmark(queries, groupId, runId, s1, **kwargs)
 
     b1.run()
 
