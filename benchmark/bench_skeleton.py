@@ -24,24 +24,28 @@ class SkeletonUser(User):
         """ executed once when user starts """
         self.userStartTime = time.time()
 
+        self.queryString = open("hyrise/test/gettingstarted.json").read()
+
     def runUser(self):
         """ main user activity """
         self.perf = {}
         tStart = time.time()
         
-        # do something here...
+        result = self.fireQuery(self.queryString)
+
+        #print result.text
 
         self.numErrors = 0
         tEnd = time.time()
-        self.log("runs", [tEnd-tStart, tStart-self.userStartTime, self.numErrors])
+        self.log("succeeded", [tEnd-tStart, tStart-self.userStartTime])
 
     def stopUser(self):
         """ executed once after stop request was sent to user """
         pass
 
     def formatLog(self, key, value):
-        if key == "runs":
-            logStr = "%f;%f;%i" % (value[0], value[1], value[2])
+        if key == "succeeded":
+            logStr = "%f;%f\n" % (value[0], value[1])
             return logStr
         elif key == "failed":
             return "%f;%f;%i\n" % (value[0], value[1], value[2])
@@ -55,6 +59,9 @@ class SkeletonBenchmark(Benchmark):
         Benchmark.__init__(self, benchmarkGroupId, benchmarkRunId, buildSettings, **kwargs)
 
         self.setUserClass(SkeletonUser)
+
+        self._dirHyriseDB = os.path.join(os.getcwd(), "hyrise/test")
+        os.environ['HYRISE_DB_PATH'] = self._dirHyriseDB
 
     def benchPrepare(self):
         pass
