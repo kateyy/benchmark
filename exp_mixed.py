@@ -83,11 +83,11 @@ kwargs = {
     "collectPerfData"   : args["perfdata"],
     "useJson"           : args["json"],
     #"dirBinary"         : "/home/Johannes.Wust/hyrise/build/",
-    "hyriseDBPath"      : "/home/Johannes.Wust/hyrise/test/",
+    #"hyriseDBPath"      : "./hyrise/test/",
     "scheduler"         : "CoreBoundQueuesScheduler",
     "serverThreads"     : 11,
     "remote"            : False,
-    "remoteUser"        : "Johannes.Wust",
+    #"remoteUser"        : "hyrise",
     #"host"              : "gaza"
 }
 

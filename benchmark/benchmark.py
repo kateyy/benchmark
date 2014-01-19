@@ -61,7 +61,7 @@ class Benchmark:
         self._scheduler         = kwargs["scheduler"] if kwargs.has_key("scheduler") else "CoreBoundQueuesScheduler"
         self._serverIP          = kwargs["serverIP"] if kwargs.has_key("serverIP") else "127.0.0.1"
         self._remoteUser        = kwargs["remoteUser"] if kwargs.has_key("remoteUser") else "hyrise"
-        self._remotePath        = kwargs["remotePath"] if kwargs.has_key("remotePath") else "/home/" + kwargs["remoteUser"] + "/benchmark"
+        self._remotePath        = kwargs["remotePath"] if kwargs.has_key("remotePath") else "/home/" + self._remoteUser + "/benchmark"
         if self._remote:
             self._ssh               = paramiko.SSHClient()
         else:
