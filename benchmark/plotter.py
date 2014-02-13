@@ -63,6 +63,8 @@ class Plotter:
         plt.title("Total Transaction Throughput")
         plt.ylabel("Transactions per Second")
         plt.xlabel("Number of Parallel Users")
+        plotX = []
+        plotY = []
         for buildId in self._buildIds:
             plotX = []
             plotY = []
@@ -89,6 +91,8 @@ class Plotter:
         plt.title("Total Failed Transactions")
         plt.ylabel("Failed Transactions per Second")
         plt.xlabel("Number of Parallel Users")
+        plotX = []
+        plotY = []
         for buildId in self._buildIds:
             plotX = []
             plotY = []
