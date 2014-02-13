@@ -243,104 +243,112 @@ class Plotter:
         for run in os.listdir(dirResults):
             dirRun = os.path.join(dirResults, run)
             if os.path.isdir(dirRun):
-                runs[run] = {}
+                self._collectRun(runs, run, dirRun)
 
-                # --- Builds --- #
-                for build in os.listdir(dirRun):
-                    self.tick()
-                    dirBuild = os.path.join(dirRun, build)
-                    if os.path.isdir(dirBuild):
-                        #runs[run][build] = []
-
-                        # -- Count Users --- #
-                        numUsers = 0
-                        for user in os.listdir(dirBuild):
-                            dirUser = os.path.join(dirBuild, user)
-                            if os.path.isdir(dirUser):
-                                numUsers += 1
-
-                        txStats = {}
-                        opStats = {}
-                        hasOpData = False
-
-                        # -- Users --- #
-                        for user in os.listdir(dirBuild):
-                            dirUser = os.path.join(dirBuild, user)
-                            if os.path.isdir(dirUser):
-                                if not os.path.isfile(os.path.join(dirUser, "transactions.log")):
-                                    print "WARNING: no transaction log found in %s!" % dirUser
-                                    continue
-                                for rawline in open(os.path.join(dirUser, "transactions.log")):
-                                    linedata = rawline.split(";")
-                                    if len(linedata) < 2:
-                                        continue
-
-                                    txId        = linedata[0]
-                                    runtime     = float(linedata[1]) * z # convert from s to ms
-                                    starttime   = float(linedata[2]) * z # convert from s to ms
-
-                                    opStats.setdefault(txId, {})
-                                    txStats.setdefault(txId,{
-                                        "totalTime": 0.0,
-                                        "userTime":  0.0,
-                                        "totalRuns": 0,
-                                        "totalFail": 0,
-                                        "rtTuples":  [],
-                                        "rtMin":     0.0,
-                                        "rtMax":     0.0,
-                                        "rtAvg":     0.0,
-                                        "rtMed":     0.0,
-                                        "rtStd":     0.0
-                                    })
-                                    txStats[txId]["totalTime"] += runtime
-                                    txStats[txId]["userTime"]  += runtime / float(numUsers)
-                                    txStats[txId]["totalRuns"] += 1
-                                    txStats[txId]["rtTuples"].append((starttime, runtime))
-
-                                    if len(linedata) > 3:
-                                        for opStr in linedata[3:]:
-                                            opData = opStr.split(",")
-                                            opStats[txId].setdefault(opData[0], {
-                                                "rtTuples":  [],
-                                                "avgRuns":   0.0,
-                                                "rtMin":     0.0,
-                                                "rtMax":     0.0,
-                                                "rtAvg":     0.0,
-                                                "rtMed":     0.0,
-                                                "rtStd":     0.0
-                                            })
-                                            opStats[txId][opData[0]]["rtTuples"].append((float(opData[1]), float(opData[2])))
-
-                                if os.path.isfile(os.path.join(dirUser, "failed.log")):
-                                    for rawline in open(os.path.join(dirUser, "failed.log")):
-                                        linedata = rawline.split(";")
-                                        if len(linedata) < 2:
-                                            continue
-                                        txId        = linedata[0]
-                                        runtime     = float(linedata[1]) * z # convert from s to ms
-                                        starttime   = float(linedata[2]) * z # convert from s to ms
-                                        txStats[txId]["totalFail"] += 1
-                                        txStats[txId]["totalTime"] += runtime
-                                        txStats[txId]["userTime"]  += runtime / float(numUsers)
-
-                        for txId, txData in txStats.iteritems():
-                            allRuntimes = [a[1] for a in txData["rtTuples"]]
-                            txStats[txId]["rtTuples"].sort(key=lambda a: a[0])
-                            txStats[txId]["rtRaw"] = allRuntimes
-                            txStats[txId]["rtMin"] = amin(allRuntimes)
-                            txStats[txId]["rtMax"] = amax(allRuntimes)
-                            txStats[txId]["rtAvg"] = average(allRuntimes)
-                            txStats[txId]["rtMed"] = median(allRuntimes)
-                            txStats[txId]["rtStd"] = std(allRuntimes)
-                            for opId, opData in opStats[txId].iteritems():
-                                opStats[txId][opId]["avgRuns"] = average([a[0] for a in opData["rtTuples"]])
-                                opStats[txId][opId]["rtMin"] = amin([a[1] for a in opData["rtTuples"]])
-                                opStats[txId][opId]["rtMax"] = amax([a[1] for a in opData["rtTuples"]])
-                                opStats[txId][opId]["rtAvg"] = average([a[1] for a in opData["rtTuples"]])
-                                opStats[txId][opId]["rtMed"] = median([a[1] for a in opData["rtTuples"]])
-                                opStats[txId][opId]["rtStd"] = std([a[1] for a in opData["rtTuples"]])
-                            txStats[txId]["operators"] = opStats[txId]
-                        if txStats != {}:
-                            runs[run][build] = {"txStats": txStats, "numUsers": numUsers}
         sys.stdout.write('\n')
         return runs
+
+    def _collectRun(self, runs, currentRun, dirRun):
+        runs[currentRun] = {}
+
+        # --- Builds --- #
+        for build in os.listdir(dirRun):
+            self.tick()
+            dirBuild = os.path.join(dirRun, build)
+            if os.path.isdir(dirBuild):
+                self._collectBuild(runs, currentRun, build, dirBuild)
+
+    def _collectBuild(self, runs, run, build, dirBuild):
+        # -- Count Users --- #
+        numUsers = 0
+        for user in os.listdir(dirBuild):
+            dirUser = os.path.join(dirBuild, user)
+            if os.path.isdir(dirUser):
+                numUsers += 1
+
+        txStats = {}
+        opStats = {}
+        hasOpData = False
+
+        # -- Users --- #
+        for user in os.listdir(dirBuild):
+            dirUser = os.path.join(dirBuild, user)
+            if os.path.isdir(dirUser):
+                self._collectUser(user, dirUser, numUsers, opStats, txStats)
+
+        for txId, txData in txStats.iteritems():
+            allRuntimes = [a[1] for a in txData["rtTuples"]]
+            txStats[txId]["rtTuples"].sort(key=lambda a: a[0])
+            txStats[txId]["rtRaw"] = allRuntimes
+            txStats[txId]["rtMin"] = amin(allRuntimes)
+            txStats[txId]["rtMax"] = amax(allRuntimes)
+            txStats[txId]["rtAvg"] = average(allRuntimes)
+            txStats[txId]["rtMed"] = median(allRuntimes)
+            txStats[txId]["rtStd"] = std(allRuntimes)
+            for opId, opData in opStats[txId].iteritems():
+                opStats[txId][opId]["avgRuns"] = average([a[0] for a in opData["rtTuples"]])
+                opStats[txId][opId]["rtMin"] = amin([a[1] for a in opData["rtTuples"]])
+                opStats[txId][opId]["rtMax"] = amax([a[1] for a in opData["rtTuples"]])
+                opStats[txId][opId]["rtAvg"] = average([a[1] for a in opData["rtTuples"]])
+                opStats[txId][opId]["rtMed"] = median([a[1] for a in opData["rtTuples"]])
+                opStats[txId][opId]["rtStd"] = std([a[1] for a in opData["rtTuples"]])
+            txStats[txId]["operators"] = opStats[txId]
+        if txStats != {}:
+            runs[run][build] = {"txStats": txStats, "numUsers": numUsers}
+
+    def _collectUser(self, user, dirUser, numUsers, opStats, txStats):
+        if not os.path.isfile(os.path.join(dirUser, "transactions.log")):
+            print "WARNING: no transaction log found in %s!" % dirUser
+            return
+        for rawline in open(os.path.join(dirUser, "transactions.log")):
+            linedata = rawline.split(";")
+            if len(linedata) < 2:
+                continue
+
+            txId        = linedata[0]
+            runtime     = float(linedata[1]) * z # convert from s to ms
+            starttime   = float(linedata[2]) * z # convert from s to ms
+
+            opStats.setdefault(txId, {})
+            txStats.setdefault(txId,{
+                "totalTime": 0.0,
+                "userTime":  0.0,
+                "totalRuns": 0,
+                "totalFail": 0,
+                "rtTuples":  [],
+                "rtMin":     0.0,
+                "rtMax":     0.0,
+                "rtAvg":     0.0,
+                "rtMed":     0.0,
+                "rtStd":     0.0
+            })
+            txStats[txId]["totalTime"] += runtime
+            txStats[txId]["userTime"]  += runtime / float(numUsers)
+            txStats[txId]["totalRuns"] += 1
+            txStats[txId]["rtTuples"].append((starttime, runtime))
+
+            if len(linedata) > 3:
+                for opStr in linedata[3:]:
+                    opData = opStr.split(",")
+                    opStats[txId].setdefault(opData[0], {
+                        "rtTuples":  [],
+                        "avgRuns":   0.0,
+                        "rtMin":     0.0,
+                        "rtMax":     0.0,
+                        "rtAvg":     0.0,
+                        "rtMed":     0.0,
+                        "rtStd":     0.0
+                    })
+                    opStats[txId][opData[0]]["rtTuples"].append((float(opData[1]), float(opData[2])))
+
+        if os.path.isfile(os.path.join(dirUser, "failed.log")):
+            for rawline in open(os.path.join(dirUser, "failed.log")):
+                linedata = rawline.split(";")
+                if len(linedata) < 2:
+                    continue
+                txId        = linedata[0]
+                runtime     = float(linedata[1]) * z # convert from s to ms
+                starttime   = float(linedata[2]) * z # convert from s to ms
+                txStats[txId]["totalFail"] += 1
+                txStats[txId]["totalTime"] += runtime
+                txStats[txId]["userTime"]  += runtime / float(numUsers)
