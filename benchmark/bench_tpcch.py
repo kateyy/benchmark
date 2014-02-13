@@ -33,6 +33,7 @@ class TPCCHUser(User):
             self.fireQueryId(id)
             tEnd = time.time()
             self.log("succeeded", [id, tEnd-tStart, tStart-self.userStartTime])
+            print "query done: " + str(id)
 
         self.numErrors = 0
 
@@ -55,7 +56,7 @@ class TPCCHUser(User):
 
 class TPCCHBenchmark(Benchmark):
 
-    def __init__(self, queryIds, benchmarkGroupId, benchmarkRunId, buildSettings, **kwargs):
+    def __init__(self, queryIds, benchmarkGroupId, benchmarkRunId, buildSettings, useMysqlTables=False, **kwargs):
         Benchmark.__init__(self, benchmarkGroupId, benchmarkRunId, buildSettings, **kwargs)
 
         self.setUserClass(TPCCHUser)
@@ -63,9 +64,18 @@ class TPCCHBenchmark(Benchmark):
         self._dirHyriseDB = os.path.join(os.getcwd(), "hyrise/test")
         os.environ['HYRISE_DB_PATH'] = self._dirHyriseDB
 
+        self.useMysqlTables = useMysqlTables
+        queryBaseName = ""
+        if useMysqlTables:
+            queryBaseName = "hyrise/test/tpcch/mysqlQuery%s.json"
+        else:
+            queryBaseName = "hyrise/test/tpcch/query%s.json"
+
         for id in queryIds:
-            self.addQueryFile(id, "hyrise/test/tpcch/query%s.json" % id)
+            self.addQueryFile(id, queryBaseName % id)
+
 
     def benchPrepare(self):
-        tpccTableLoad = open("hyrise/test/tpcc/load_tpcc_tables.json").read()
-        self.fireQuery(tpccTableLoad)
+        if not self.useMysqlTables:
+            tpccTableLoad = open("hyrise/test/tpcc/load_tpcc_tables.json").read()
+            self.fireQuery(tpccTableLoad)
