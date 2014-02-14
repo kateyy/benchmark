@@ -32,8 +32,7 @@ class TPCCHUser(User):
             tStart = time.time()
             self.fireQueryId(id)
             tEnd = time.time()
-            self.log("succeeded", [id, tEnd-tStart, tStart-self.userStartTime])
-            print "query done: " + str(id)
+            self.log("queries", [id, tEnd-tStart, tStart-self.userStartTime])
 
         self.numErrors = 0
 
@@ -45,12 +44,11 @@ class TPCCHUser(User):
         self.fireQuery(self._queryDict[queryId], queryArgs, sessionContext, autocommit, stored_procedure)
 
     def formatLog(self, key, value):
-        if key == "succeeded":
-            logStr = "id:%i;%f;%f\n" % (value[0], value[1], value[2])
+        if key == "queries":  # log: id, duration, start time
+            logStr = "%i;%f;%f\n" % (value[0], value[1], value[2])
             return logStr
-        elif key == "failed":
-            return "id:%i;%f;%f\n" % (value[0], value[1], value[2])
         else:
+            print "invalid key for log event: %s" % key
             return "%s\n" % str(value)
 
 

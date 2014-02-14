@@ -5,7 +5,7 @@ import getpass
 
 
 aparser = argparse.ArgumentParser(description='Python skeleton benchmark implementation for HYRISE')
-aparser.add_argument('--duration', default=30, type=int, metavar='D',
+aparser.add_argument('--duration', default=120, type=int, metavar='D',
                      help='How long to run the benchmark in seconds')
 aparser.add_argument('--clients', default=-1, type=int, metavar='N',
                      help='The number of blocking clients to fork (note: this overrides --clients-min/--clients-max')
@@ -76,6 +76,7 @@ for num_clients in xrange(minClients, maxClients+1):
 
     #queries = {1, 3, 6, 18, 19} # for table file fetching
     queries = {1, 6}           # for mysql tables
+    # don't forget to set the HYRISE_MYSQL_{HOST,PORT,USER,PASS} environment variables if using mysql tables
 
     b1 = benchmark.TPCCHBenchmark(queries, groupId, runId, s1, useMysqlTables=True, **kwargs)
 

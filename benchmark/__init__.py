@@ -1,6 +1,7 @@
 from benchmark import Benchmark
 from build import Build
 from plotter import Plotter
+from tpcch_plotter import TPCCHPlotter
 from settings import Settings
 from user import User
 
