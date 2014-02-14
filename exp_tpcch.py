@@ -23,7 +23,7 @@ aparser.add_argument('--port', default=5001, type=int, metavar="P",
                      help='Port on which HYRISE should be run')
 aparser.add_argument('--threads', default=0, type=int, metavar="T",
                      help='Number of server threadsto use')
-aparser.add_argument('--warmup', default=3, type=int,
+aparser.add_argument('--warmup', default=10, type=int,
                      help='Warmuptime before logging is activated')
 aparser.add_argument('--manual', action='store_true',
                      help='Do not build and start a HYRISE instance (note: a HYRISE server must be running on the specified port)')

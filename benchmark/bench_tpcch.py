@@ -72,8 +72,12 @@ class TPCCHBenchmark(Benchmark):
         for id in queryIds:
             self.addQueryFile(id, queryBaseName % id)
 
-
     def benchPrepare(self):
-        if not self.useMysqlTables:
-            tpccTableLoad = open("hyrise/test/tpcc/load_tpcc_tables.json").read()
+        if self.useMysqlTables:
+            tpccTableLoad = open("hyrise/test/tpcc/load_tpcc_mysql_tables.json").read()
+            print "loading tables from mysql host..."
+            self.fireQuery(tpccTableLoad)
+            print " ...done"
+        else:
+            tpccTableLoad = open("hyrise/test/tpcc/load_tpcc_csv_tables.json").read()
             self.fireQuery(tpccTableLoad)
